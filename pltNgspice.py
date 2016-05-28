@@ -3,31 +3,28 @@ import re
 import numpy as np
 import collections
 
-
-
-def split(plotDat, paramLabels=None):
-    """ Splits the data (which is an ordered dictionary) into an array of ordered
-    dictionaries if the data has come from a parametric analysis. If the
-    analysis is not parametric, the size of the array is 1.
+def split(plotDat):
+    """ Converts each of the arrays in plotDat into 2-D arrays
+    where the first index corresponds to the parameter being swept.
     """
     sweep = plotDat[plotDat.keys()[0]]
     splitPos = np.argwhere(sweep == sweep[0])
-
-    if (paramLabels == None):
-        paramLabels = range(len(splitPos))
-
-    plotDatSplit = {}
+    nSplits = len(splitPos)
+    
+    plotDatSplit = collections.OrderedDict()
+    keys = plotDat.keys()
+    
     splitPtr = 0;
     splitPos = np.append(splitPos, len(sweep))
-    for param in paramLabels:
-        plotDatSplit[param] = collections.OrderedDict()
-        for k in plotDat:
-            plotDatSplit[param][k] = plotDat[k][splitPos[splitPtr]:splitPos[splitPtr + 1]]
-        splitPtr += 1
+    
+    for key in keys:
+        plotDatSplit[key] = np.zeros((nSplits, len(plotDat[key])/ nSplits))
+        for splitPtr in range(nSplits):
+            plotDatSplit[key][splitPtr] = plotDat[key][splitPos[splitPtr]:splitPos[splitPtr + 1]]
     
     return plotDatSplit
 
-def read(fileName):
+def read(fileName, isParametric=False):
     """ Reads a SPICE3RAW file and stores the data. Returns an array of ordered
     dictionaries containing arrays of the simulated data. The number of ordered
     dictionaries is greater than 1 for a analysis.
@@ -65,7 +62,7 @@ def read(fileName):
             
             # Create arrays to store the points
             for j in range(numVars):
-                plotDat[(varList[j*3 + 1], varList[j*3 + 2])] = np.zeros(numPoints)
+                plotDat[varList[j*3 + 1].encode("ascii")] = np.zeros(numPoints)
             
             # Populate the arrays
             bytePtr = endPos + len('Binary:\n')
@@ -73,13 +70,18 @@ def read(fileName):
                 for k in plotDat.keys():
                     plotDat[k][j] = struct.unpack('d', dataBytes[bytePtr:bytePtr+8])[0]
                     bytePtr += 8
+    #if (isParametric):
+    #    return split(plotDat)
+    #else:
+    #    return plotDat
     return split(plotDat)
+    
 
 def getVars(plotDat):
     """ Returns the list of variable names and their units, i.e. the indices
     for the ordered dictionaries that read generates.
     """
-    return plotDat[0].keys()
+    return plotDat.keys()
 
 def plot(plotDat, xVar, yVar, color='b'):
     """ Plots the specified variables stored in plotDat. If the simulation is
@@ -92,8 +94,8 @@ def plot(plotDat, xVar, yVar, color='b'):
     color - The color of the line plot (defaul blue).
     """
     import matplotlib.pyplot as plt
-    for rec in plotDat:
-        lines = plt.plot(plotDat[rec][xVar], plotDat[rec][yVar], c=color)
+    for i in range(np.shape(plotDat[xVar])[0]):
+        lines = plt.plot(plotDat[xVar][i], plotDat[yVar][i], c=color)
         color = lines[0].get_color()
     plt.show()
 
