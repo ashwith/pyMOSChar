@@ -24,10 +24,10 @@ def split(plotDat):
     
     return plotDatSplit
 
-def read(fileName, isParametric=False):
-    """ Reads a SPICE3RAW file and stores the data. Returns an array of ordered
-    dictionaries containing arrays of the simulated data. The number of ordered
-    dictionaries is greater than 1 for a analysis.
+def read(fileName):
+    """ Reads a SPICE3RAW file and stores the data. Returns an ordered
+    dictionary containing 2D arrays of simulated data. 2D arrays are used in
+    case the simulation is parametric.
 
     Arguments:
     filename : A valid SPICE3 rawfile
