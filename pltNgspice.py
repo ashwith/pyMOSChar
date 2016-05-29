@@ -74,6 +74,7 @@ def read(fileName):
     #    return split(plotDat)
     #else:
     #    return plotDat
+    rawFile.close()
     return split(plotDat)
     
 
