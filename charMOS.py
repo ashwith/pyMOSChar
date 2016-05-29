@@ -249,5 +249,5 @@ def genDB():
     os.system('rm -f charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log')
     print
     print("Data generated. Saving...")
-    pickle.dump(mosDat, open("MOS.dat", "wb"))
+    pickle.dump(mosDat, open("MOS.dat", "wb"), pickle.HIGHEST_PROTOCOL)
     print("Done! Data saved in MOS.dat")
