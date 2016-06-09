@@ -16,7 +16,7 @@ def split(plotDat):
     
     splitPtr = 0;
     splitPos = np.append(splitPos, len(sweep))
-    
+
     for key in keys:
         plotDatSplit[key] = np.zeros((nSplits, len(plotDat[key])/ nSplits))
         for splitPtr in range(nSplits):
@@ -24,7 +24,7 @@ def split(plotDat):
     
     return plotDatSplit
 
-def read(fileName):
+def read(fileName, simulator="ngspice"):
     """ Reads a SPICE3RAW file and stores the data. Returns an ordered
     dictionary containing 2D arrays of simulated data. 2D arrays are used in
     case the simulation is parametric.
@@ -37,8 +37,9 @@ def read(fileName):
     dataStr = str(dataBytes)
     
     simStarts = [m.start() for m in re.finditer('Title', dataStr)]
+    
     plotDat = collections.OrderedDict()
-
+    
     for startPtr in simStarts:
         flagStart = dataBytes.find(b'Flags: ', startPtr) + len('Flags: ')
         flags = dataBytes[flagStart:flagStart+4].decode()
@@ -49,34 +50,55 @@ def read(fileName):
             startPos = dataBytes.find(b'No. Variables: ', startPtr) + len('No. Variables: ')
             endPos = dataBytes.find(b'No. Points:', startPtr)
             numVars = int(dataBytes[startPos:endPos].decode())
-
+            
             #Extract the number of points
             startPos = endPos + len('No. Points: ')
             endPos = dataBytes.find(b'Variables:', startPos)
             numPoints = int(dataBytes[startPos:endPos].decode())
-        
+            
             #Extract variable names
-            startPos = endPos + len('Variables:')
-            endPos = dataBytes.find(b'Binary:', startPtr)
-            varList = dataBytes[startPos:endPos].decode().split()
+            #startPos = endPos + len('Variables:')
+            #endPos = dataBytes.find(b'Binary:', startPtr)
+            #varList = dataBytes[startPos:endPos].decode().split()
             
-            # Create arrays to store the points
-            for j in range(numVars):
-                plotDat[varList[j*3 + 1].encode("ascii")] = np.zeros(numPoints)
+            tmpPos = dataBytes.find(b'Variables:')
+            startPos = dataBytes.find(b'Variables:', tmpPos + len('Variables')) + len('Variables:')
+            endPos = dataBytes.find(b'Binary:\n')
+            varData = str(dataBytes[startPos:endPos]).replace('\t', ' ').strip()
+            varLines = varData.split('\n')
+            varList = [line.strip().split()[1] for line in varLines]
             
-            # Populate the arrays
-            bytePtr = endPos + len('Binary:\n')
-            for j in range(numPoints):
-                for k in plotDat.keys():
-                    plotDat[k][j] = struct.unpack('d', dataBytes[bytePtr:bytePtr+8])[0]
-                    bytePtr += 8
+            if (simulator == "ngspice"):
+                # Create arrays to store the points
+                for j in range(numVars):
+                    plotDat[varList[j]] = np.zeros(numPoints)
+                # Populate the arrays
+                bytePtr = endPos + len('Binary:\n')
+                for j in range(numPoints):
+                    for k in plotDat.keys():
+                        plotDat[k][j] = struct.unpack('d', dataBytes[bytePtr:bytePtr+8])[0]
+                        bytePtr += 8
+                        
+            elif (simulator == "spectre"):
+                headerEnds = [m.start() for m in re.finditer('Binary:\n', dataStr)]
+                for j in range(numVars):
+                    plotDat[varList[j]] = np.zeros(numPoints*len(headerEnds))
+                sweepIter = 0
+                for endPos in headerEnds:
+                    bytePtr = endPos + len('Binary:\n')
+                    for j in range(numPoints):
+                        for k in plotDat.keys():
+                            plotDat[k][j + sweepIter*numPoints] = struct.unpack('d', dataBytes[bytePtr:bytePtr+8][::-1])[0]
+                            bytePtr += 8
+                    sweepIter += 1
+            
     #if (isParametric):
     #    return split(plotDat)
     #else:
     #    return plotDat
     rawFile.close()
+    #return plotDat
     return split(plotDat)
-    
 
 def getVars(plotDat):
     """ Returns the list of variable names and their units, i.e. the indices
