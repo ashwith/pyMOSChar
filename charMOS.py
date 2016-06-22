@@ -26,7 +26,9 @@ modelP = None
 
 corner = None
 
-def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", vgsMax=1.8, vgsStep=25e-3, vdsMax=1.8, vdsStep=25e-3, vsbMax=1.8, vsbStep=25e-3, width=10, temp=300, numfing=10, corner='T'):
+subcktPath = None
+
+def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", subcktPath="", vgsMax=1.8, vgsStep=25e-3, vdsMax=1.8, vdsStep=25e-3, vsbMax=1.8, vsbStep=25e-3, width=10, temp=300, numfing=10, corner='T'):
 
     global vsb
 
@@ -49,6 +51,7 @@ def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", vgsMax=1.8, vgsS
     globals()['modelFile']  =   modelFile
     globals()['modelN'] = modelN
     globals()['modelP'] = modelP
+    globals()['subcktPath'] = subcktPath
     globals()['corner'] = corner
 
     vgs = np.linspace(0, vgsMax, vgsMax/vgsStep + 1)
@@ -197,11 +200,19 @@ def genNetlistP(fName='charPMOS.net'):
     netlistP.close();
 
 def genNetlistSpectre(fName='charMOS.scs'):
+
+    if (subcktPath == ""):
+        nmos = "mn"
+        pmos = "mp"
+    else:
+        nmos = "mn." + subcktPath
+        pmos = "mp." + subcktPath
+
     netlist = open(fName, 'w')
     netlist.write('//charMOS.scs \n')
     netlist.write('include  "{0}" section={1}\n'.format(modelFile, corner))
     netlist.write('include "simParams.scs" \n')
-    netlist.write('save mn:ids mn:vth mn:igd mn:igs mn:gm mn:gmbs mn:gds mn:cgg mn:cgs mn:cgd mn:cgb mn:cdd mn:cdg mn:css mn:csg mn:cjd mn:cjs mp:ids mp:vth mp:igd mp:igs mp:gm mp:gmbs mp:gds mp:cgg mp:cgs mp:cgd mp:cgb mp:cdd mp:cdg mp:css mp:csg mp:cjd mp:cjs\n')
+    netlist.write('save {0}:ids {0}:vth {0}:igd {0}:igs {0}:gm {0}:gmbs {0}:gds {0}:cgg {0}:cgs {0}:cgd {0}:cgb {0}:cdd {0}:cdg {0}:css {0}:csg {0}:cjd {0}:cjs {1}:ids {1}:vth {1}:igd {1}:igs {1}:gm {1}:gmbs {1}:gds {1}:cgg {1}:cgs {1}:cgd {1}:cgb {1}:cdd {1}:cdg {1}:css {1}:csg {1}:cjd {1}:cjs\n'.format(nmos, pmos))
     netlist.write('parameters gs=0 ds=0 \n')
     netlist.write('vdsn     (vdn 0)         vsource dc=ds  \n')
     netlist.write('vgsn     (vgn 0)         vsource dc=gs  \n')
@@ -284,30 +295,37 @@ def genDB(simulator="ngspice"):
                 
                 runSim("charMOS.scs", "spectre")
                 simDat = pltNgspice.read('charMOS.raw', 'spectre')
+                
+                if (subcktPath == ""):
+                    nmos = "mn"
+                    pmos = "mp"
+                else:
+                    nmos = "mn." + subcktPath
+                    pmos = "mp." + subcktPath
 
-                mosDat['nfet']['id'][idxL][idxVSB]  = simDat['mn:ids']
-                mosDat['nfet']['vt'][idxL][idxVSB]  = simDat['mn:vth']
-                mosDat['nfet']['gm'][idxL][idxVSB]  = simDat['mn:gm']
-                mosDat['nfet']['gmb'][idxL][idxVSB] = simDat['mn:gmbs']
-                mosDat['nfet']['gds'][idxL][idxVSB] = simDat['mn:gds']
-                mosDat['nfet']['cgg'][idxL][idxVSB] = simDat['mn:cgg']
-                mosDat['nfet']['cgs'][idxL][idxVSB] = simDat['mn:cgs']
-                mosDat['nfet']['cgd'][idxL][idxVSB] = simDat['mn:cgd']
-                mosDat['nfet']['cgb'][idxL][idxVSB] = simDat['mn:cgb']
-                mosDat['nfet']['cdd'][idxL][idxVSB] = simDat['mn:cdd']
-                mosDat['nfet']['css'][idxL][idxVSB] = simDat['mn:css']
+                mosDat['nfet']['id'][idxL][idxVSB]  = simDat['{0}:ids'.format(nmos)]
+                mosDat['nfet']['vt'][idxL][idxVSB]  = simDat['{0}:vth'.format(nmos)]
+                mosDat['nfet']['gm'][idxL][idxVSB]  = simDat['{0}:gm'.format(nmos)]
+                mosDat['nfet']['gmb'][idxL][idxVSB] = simDat['{0}:gmbs'.format(nmos)]
+                mosDat['nfet']['gds'][idxL][idxVSB] = simDat['{0}:gds'.format(nmos)]
+                mosDat['nfet']['cgg'][idxL][idxVSB] = simDat['{0}:cgg'.format(nmos)]
+                mosDat['nfet']['cgs'][idxL][idxVSB] = simDat['{0}:cgs'.format(nmos)]
+                mosDat['nfet']['cgd'][idxL][idxVSB] = simDat['{0}:cgd'.format(nmos)]
+                mosDat['nfet']['cgb'][idxL][idxVSB] = simDat['{0}:cgb'.format(nmos)]
+                mosDat['nfet']['cdd'][idxL][idxVSB] = simDat['{0}:cdd'.format(nmos)]
+                mosDat['nfet']['css'][idxL][idxVSB] = simDat['{0}:css'.format(nmos)]
 
-                mosDat['pfet']['id'][idxL][idxVSB]  = simDat['mp:ids']
-                mosDat['pfet']['vt'][idxL][idxVSB]  = simDat['mp:vth']
-                mosDat['pfet']['gm'][idxL][idxVSB]  = simDat['mp:gm']
-                mosDat['pfet']['gmb'][idxL][idxVSB] = simDat['mp:gmbs']
-                mosDat['pfet']['gds'][idxL][idxVSB] = simDat['mp:gds']
-                mosDat['pfet']['cgg'][idxL][idxVSB] = simDat['mp:cgg']
-                mosDat['pfet']['cgs'][idxL][idxVSB] = simDat['mp:cgs']
-                mosDat['pfet']['cgd'][idxL][idxVSB] = simDat['mp:cgd']
-                mosDat['pfet']['cgb'][idxL][idxVSB] = simDat['mp:cgb']
-                mosDat['pfet']['cdd'][idxL][idxVSB] = simDat['mp:cdd']
-                mosDat['pfet']['css'][idxL][idxVSB] = simDat['mp:css']
+                mosDat['pfet']['id'][idxL][idxVSB]  = simDat['{0}:ids'.format(pmos)]
+                mosDat['pfet']['vt'][idxL][idxVSB]  = simDat['{0}:vth'.format(pmos)]
+                mosDat['pfet']['gm'][idxL][idxVSB]  = simDat['{0}:gm'.format(pmos)]
+                mosDat['pfet']['gmb'][idxL][idxVSB] = simDat['{0}:gmbs'.format(pmos)]
+                mosDat['pfet']['gds'][idxL][idxVSB] = simDat['{0}:gds'.format(pmos)]
+                mosDat['pfet']['cgg'][idxL][idxVSB] = simDat['{0}:cgg'.format(pmos)]
+                mosDat['pfet']['cgs'][idxL][idxVSB] = simDat['{0}:cgs'.format(pmos)]
+                mosDat['pfet']['cgd'][idxL][idxVSB] = simDat['{0}:cgd'.format(pmos)]
+                mosDat['pfet']['cgb'][idxL][idxVSB] = simDat['{0}:cgb'.format(pmos)]
+                mosDat['pfet']['cdd'][idxL][idxVSB] = simDat['{0}:cdd'.format(pmos)]
+                mosDat['pfet']['css'][idxL][idxVSB] = simDat['{0}:css'.format(pmos)]
             
             
             rows, columns = os.popen('stty size', 'r').read().split()
