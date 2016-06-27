@@ -115,7 +115,7 @@ def lookup(mosType, *outVars, **inVars):
     if (mosType == 'nfet'):
         points = (mosDat[mosType]['length'], -mosDat[mosType]['vsb'], mosDat[mosType]['vds'], mosDat[mosType]['vgs'])
     else:
-        points = (mosDat[mosType]['length'],  mosDat[mosType]['vsb'], mosDat[mosType]['vds'], mosDat[mosType]['vgs'])
+        points = (mosDat[mosType]['length'],  mosDat[mosType]['vsb'], -mosDat[mosType]['vds'], -mosDat[mosType]['vgs'])
 
     xi = (L, VSB, VDS, VGS)
     if (mode == 1 or mode == 2):
