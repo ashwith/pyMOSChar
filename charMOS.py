@@ -28,6 +28,8 @@ corner = None
 
 subcktPath = None
 
+datFileName = "MOS.dat"
+
 def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", subcktPath="", vgsMax=1.8, vgsStep=25e-3, vdsMax=1.8, vdsStep=25e-3, vsbMax=1.8, vsbStep=25e-3, width=10, temp=300, numfing=10, corner='T'):
 
     global vsb
@@ -339,5 +341,5 @@ def genDB(simulator="ngspice"):
     os.system('rm -f charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log, charMOS.scs, charMOS.raw')
     print
     print("Data generated. Saving...")
-    pickle.dump(mosDat, open("MOS.dat", "wb"), pickle.HIGHEST_PROTOCOL)
-    print("Done! Data saved in MOS.dat")
+    pickle.dump(mosDat, open(datFileName, "wb"), pickle.HIGHEST_PROTOCOL)
+    print("Done! Data saved in " + datFileName)
