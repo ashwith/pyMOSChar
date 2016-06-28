@@ -57,10 +57,6 @@ def read(fileName, simulator="ngspice"):
             numPoints = int(dataBytes[startPos:endPos].decode())
             
             #Extract variable names
-            #startPos = endPos + len('Variables:')
-            #endPos = dataBytes.find(b'Binary:', startPtr)
-            #varList = dataBytes[startPos:endPos].decode().split()
-            
             tmpPos = dataBytes.find(b'Variables:')
             startPos = dataBytes.find(b'Variables:', tmpPos + len('Variables')) + len('Variables:')
             endPos = dataBytes.find(b'Binary:\n')
@@ -92,6 +88,7 @@ def read(fileName, simulator="ngspice"):
                             bytePtr += 8
                     sweepIter += 1
             
+    # Assuming that the data file always contains parametric data for now
     #if (isParametric):
     #    return split(plotDat)
     #else:
