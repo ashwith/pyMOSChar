@@ -5,57 +5,55 @@ import pickle
 import pltNgspice
 import numpy as np
 
+import signal
+import sys
+
 mosDat = {}
-vgsStep =   None
-vdsStep =   None
-vsbStep =   None
 
-vgsMax  =   None
-vdsMax  =   None
-vsbMax  =   None
-
-mosLengths = None 
-
-width = None
-vsb   = None
-
-modelFile = None
-
-modelN = None
-modelP = None
-
-corner = None
-
-subcktPath = None
-
+modelFile   = "mosfet.mod"
+mosLengths  = np.arange(1, 10, 1)
+simulator   = "ngspice"
+modelN      = "cmosn"
+modelP      = "cmosp"
+corner      = 'tt'
+subcktPath  = ""
 datFileName = "MOS.dat"
+vgsStep     =  25e-3 
+vdsStep     =  25e-3 
+vsbStep     =  25e-3 
+vgsMax      =  1.8 
+vdsMax      =  1.8 
+vsbMax      =  1.8 
+numfing     = 1
+temp        = 300
+width       = 1
 
-def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", subcktPath="", vgsMax=1.8, vgsStep=25e-3, vdsMax=1.8, vdsStep=25e-3, vsbMax=1.8, vsbStep=25e-3, width=10, temp=300, numfing=10, corner='T'):
+vgs = None
+vds = None
+vsb = None
 
+def handleKill(signal, frame):
+    print('Data generation halted. Cleaning up...')
+    os.system('rm -fr {0} charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log, charMOS.scs, charMOS.raw charMOS.psf.raw'.format(datFileName))
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handleKill)
+
+def init(**settings):
+
+    global vgs
     global vsb
+    global vds
+    global mosDat
+
+    for key in settings.keys():
+        globals()[key] = settings[key]
 
     if (not os.path.isfile(modelFile)):
         print("Model file {0} not found!".format(modelFile))
         print("Please call init() again with a valid model file")
         return None
-
-    globals()['mosLengths'] = mosLengths
-
-    globals()['vgsStep']    =   vgsStep
-    globals()['vdsStep']    =   vdsStep
-    globals()['vsbStep']    =   vsbStep
-
-    globals()['vgsMax']     =   vgsMax
-    globals()['vdsMax']     =   vdsMax
-    globals()['vsbMax']     =   vsbMax
-    globals()['width']      =   width
     
-    globals()['modelFile']  =   modelFile
-    globals()['modelN'] = modelN
-    globals()['modelP'] = modelP
-    globals()['subcktPath'] = subcktPath
-    globals()['corner'] = corner
-
     vgs = np.linspace(0, vgsMax, vgsMax/vgsStep + 1)
     vds = np.linspace(0, vdsMax, vdsMax/vdsStep + 1)
     vsb = np.linspace(0, vsbMax, vsbMax/vsbStep + 1)
@@ -63,6 +61,7 @@ def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", subcktPath="", v
     mosDat['pfet'] = {}
     mosDat['nfet'] = {}
     mosDat['modelFile'] = modelFile
+    mosDat['simulator'] = simulator
 
     mosDat['nfet']['corner'] = corner
     mosDat['nfet']['temp'] = temp
@@ -106,8 +105,6 @@ def init(mosLengths, modelFile, modelN="cmosn", modelP="cmosp", subcktPath="", v
     mosDat['pfet']['cgb'] = np.zeros((len(mosLengths), len(vsb), len(vds), len(vgs)))
     mosDat['pfet']['cdd'] = np.zeros((len(mosLengths), len(vsb), len(vds), len(vgs)))
     mosDat['pfet']['css'] = np.zeros((len(mosLengths), len(vsb), len(vds), len(vgs)))
-
-
 
 def genNetlistN(fName='charNMOS.net'):
     netlistN = open(fName, 'w')
@@ -245,8 +242,10 @@ def genSimParamsSpectre(L, VSB):
     
 def runSim(fileName='charMOS.net', simulator='ngspice'):
     os.system("{0} {1} &> /dev/null".format(simulator, fileName))
+
+
+def genDB():
     
-def genDB(simulator="ngspice"):
 
     if (simulator == "ngspice"):
         genNetlistN()
@@ -338,7 +337,7 @@ def genDB(simulator="ngspice"):
             sys.stdout.write("\r[{0}{1}] {2}%".format("#"*progLen, " "*(columns-progLen), progPercent))
             sys.stdout.flush()
 
-    os.system('rm -f charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log, charMOS.scs, charMOS.raw')
+    os.system('rm -fr charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log, charMOS.scs, charMOS.raw, charMOS.psf.raw')
     print
     print("Data generated. Saving...")
     pickle.dump(mosDat, open(datFileName, "wb"), pickle.HIGHEST_PROTOCOL)
