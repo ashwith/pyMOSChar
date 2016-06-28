@@ -245,13 +245,16 @@ def runSim(fileName='charMOS.net', simulator='ngspice'):
 
 
 def genDB():
-    
 
     if (simulator == "ngspice"):
         genNetlistN()
         genNetlistP()
     elif (simulator == "spectre"):
         genNetlistSpectre()
+    else:
+        print "ERROR: Invalid/Unsupported simulator specified"
+        sys.exit(0)
+
     progTotal = len(mosLengths)*len(vsb)
     progCurr  = 0
     print("Data generation in progress. Go have a coffee...")
