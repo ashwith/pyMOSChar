@@ -15,6 +15,7 @@ mosLengths  = np.arange(1, 10, 1)
 simulator   = "ngspice"
 modelN      = "cmosn"
 modelP      = "cmosp"
+simOptions  = ""
 corners      = ('section=tt',)
 subcktPath  = ""
 datFileName = "MOS.dat"
@@ -249,7 +250,7 @@ def genSimParamsSpectre(L, VSB):
     paramFile.close()
     
 def runSim(fileName='charMOS.net', simulator='ngspice'):
-    os.system("{0} {1} &> /dev/null".format(simulator, fileName))
+    os.system("{0} {1} {2} &> /dev/null".format(simulator, fileName), simOptions)
 
 
 def genDB():
