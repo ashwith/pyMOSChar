@@ -10,12 +10,12 @@ import sys
 
 mosDat = {}
 
-modelFile   = "mosfet.mod"
+modelFiles  = ("mosfet.mod",)
 mosLengths  = np.arange(1, 10, 1)
 simulator   = "ngspice"
 modelN      = "cmosn"
 modelP      = "cmosp"
-corner      = 'tt'
+corners      = ('section=tt',)
 subcktPath  = ""
 datFileName = "MOS.dat"
 vgsStep     =  25e-3 
@@ -48,11 +48,12 @@ def init(**settings):
 
     for key in settings.keys():
         globals()[key] = settings[key]
-
-    if (not os.path.isfile(modelFile)):
-        print("Model file {0} not found!".format(modelFile))
-        print("Please call init() again with a valid model file")
-        return None
+    
+    for modelFile in modelFiles: 
+        if (not os.path.isfile(modelFile)):
+            print("Model file {0} not found!".format(modelFile))
+            print("Please call init() again with a valid model file")
+            return None
     
     vgs = np.linspace(0, vgsMax, vgsMax/vgsStep + 1)
     vds = np.linspace(0, vdsMax, vdsMax/vdsStep + 1)
@@ -60,10 +61,10 @@ def init(**settings):
 
     mosDat['pfet'] = {}
     mosDat['nfet'] = {}
-    mosDat['modelFile'] = modelFile
+    mosDat['modelFiles'] = modelFiles
     mosDat['simulator'] = simulator
 
-    mosDat['nfet']['corner'] = corner
+    mosDat['nfet']['corners'] = corners
     mosDat['nfet']['temp'] = temp
     mosDat['nfet']['length'] = mosLengths
     mosDat['nfet']['width'] = width
@@ -72,7 +73,7 @@ def init(**settings):
     mosDat['nfet']['vds'] = vds
     mosDat['nfet']['vsb'] = -vsb
     
-    mosDat['pfet']['corner'] = corner
+    mosDat['pfet']['corners'] = corners
     mosDat['pfet']['temp'] = temp
     mosDat['pfet']['length'] = mosLengths
     mosDat['pfet']['width'] = width
@@ -110,7 +111,8 @@ def genNetlistNngspice(fName='charNMOS.net'):
     netlistN = open(fName, 'w')
     netlistN.write("Characterize N Channel MOSFET\n")
     netlistN.write("\n")
-    netlistN.write(".include {0}\n".format(modelFile))
+    for modelFile in modelFiles:
+        netlistN.write(".include {0}\n".format(modelFile))
     netlistN.write(".include simParams.net\n")
     netlistN.write("\n")
     netlistN.write("vds  nDrain 0 dc 0\n")
@@ -156,7 +158,8 @@ def genNetlistPngspice(fName='charPMOS.net'):
     netlistP = open(fName, 'w')
     netlistP.write("Characterize P Channel MOSFET\n")
     netlistP.write("\n")
-    netlistP.write(".include {0}\n".format(modelFile))
+    for modelFile in modelFiles:
+        netlistP.write(".include {0}\n".format(modelFile))
     netlistP.write(".include simParams.net\n")
     netlistP.write("\n")
     netlistP.write("vds  nDrain 0 dc 0\n")
@@ -213,7 +216,8 @@ def genNetlistSpectre(fName='charMOS.scs'):
 
     netlist = open(fName, 'w')
     netlist.write('//charMOS.scs \n')
-    netlist.write('include  "{0}" section={1}\n'.format(modelFile, corner))
+    for corner in corners:
+        netlist.write('include  "{0}" {1}\n'.format(modelFile, corner))
     netlist.write('include "simParams.scs" \n')
     netlist.write('save {0}:ids {0}:vth {0}:igd {0}:igs {0}:gm {0}:gmbs {0}:gds {0}:cgg {0}:cgs {0}:cgd {0}:cgb {0}:cdd {0}:cdg {0}:css {0}:csg {0}:cjd {0}:cjs {1}:ids {1}:vth {1}:igd {1}:igs {1}:gm {1}:gmbs {1}:gds {1}:cgg {1}:cgs {1}:cgd {1}:cgb {1}:cdd {1}:cdg {1}:css {1}:csg {1}:cjd {1}:cjs\n'.format(nmos, pmos))
     netlist.write('parameters gs=0 ds=0 \n')
