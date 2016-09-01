@@ -106,7 +106,7 @@ def init(**settings):
     mosDat['pfet']['cdd'] = np.zeros((len(mosLengths), len(vsb), len(vds), len(vgs)))
     mosDat['pfet']['css'] = np.zeros((len(mosLengths), len(vsb), len(vds), len(vgs)))
 
-def genNetlistN(fName='charNMOS.net'):
+def genNetlistNngspice(fName='charNMOS.net'):
     netlistN = open(fName, 'w')
     netlistN.write("Characterize N Channel MOSFET\n")
     netlistN.write("\n")
@@ -152,7 +152,7 @@ def genNetlistN(fName='charNMOS.net'):
     netlistN.write(".end\n")
     netlistN.close();
     
-def genNetlistP(fName='charPMOS.net'):
+def genNetlistPngspice(fName='charPMOS.net'):
     netlistP = open(fName, 'w')
     netlistP.write("Characterize P Channel MOSFET\n")
     netlistP.write("\n")
@@ -197,6 +197,10 @@ def genNetlistP(fName='charPMOS.net'):
     netlistP.write(".endc\n")
     netlistP.write(".end\n")
     netlistP.close();
+
+def genNetlistNEldo(fName='charNMOS.net'):
+    netlistN = open(fName, 'w')
+
 
 def genNetlistSpectre(fName='charMOS.scs'):
 
@@ -247,8 +251,8 @@ def runSim(fileName='charMOS.net', simulator='ngspice'):
 def genDB():
 
     if (simulator == "ngspice"):
-        genNetlistN()
-        genNetlistP()
+        genNetlistNngspice()
+        genNetlistPngspice()
     elif (simulator == "spectre"):
         genNetlistSpectre()
     else:
