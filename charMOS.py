@@ -118,7 +118,7 @@ def genNetlistNngspice(fName='charNMOS.net'):
     netlistN.write("\n")
     netlistN.write("vds  nDrain 0 dc 0\n")
     netlistN.write("vgs  nGate  0 dc 0\n")
-    netlistN.write("vbs  nBulk  0 dc {-sb}\n")
+    netlistN.write("vbs  nBulk  0 dc {-mosChar_sb}\n")
     netlistN.write("\n")
     netlistN.write("mn nDrain nGate 0 nBulk {0}  L={{length*1e-6}} W={{{1}*1e-6}}\n".format(modelN, width))
     netlistN.write("\n")
@@ -165,7 +165,7 @@ def genNetlistPngspice(fName='charPMOS.net'):
     netlistP.write("\n")
     netlistP.write("vds  nDrain 0 dc 0\n")
     netlistP.write("vgs  nGate  0 dc 0\n")
-    netlistP.write("vbs  nBulk  0 dc sb\n")
+    netlistP.write("vbs  nBulk  0 dc mosChar_sb\n")
     netlistP.write("\n")
     netlistP.write("mp nDrain nGate 0 nBulk {0}  L={{length*1e-6}} W={{{1}*1e-6}}\n".format(modelP, width))
     netlistP.write("\n")
@@ -217,40 +217,40 @@ def genNetlistSpectre(fName='charMOS.scs'):
 
     netlist = open(fName, 'w')
     netlist.write('//charMOS.scs \n')
-    for corner in corners:
+    for modelFile, corner in zip(modelFiles, corners):
         netlist.write('include  "{0}" {1}\n'.format(modelFile, corner))
     netlist.write('include "simParams.scs" \n')
     netlist.write('save {0}:ids {0}:vth {0}:igd {0}:igs {0}:gm {0}:gmbs {0}:gds {0}:cgg {0}:cgs {0}:cgd {0}:cgb {0}:cdd {0}:cdg {0}:css {0}:csg {0}:cjd {0}:cjs {1}:ids {1}:vth {1}:igd {1}:igs {1}:gm {1}:gmbs {1}:gds {1}:cgg {1}:cgs {1}:cgd {1}:cgb {1}:cdd {1}:cdg {1}:css {1}:csg {1}:cjd {1}:cjs\n'.format(nmos, pmos))
-    netlist.write('parameters gs=0 ds=0 \n')
-    netlist.write('vdsn     (vdn 0)         vsource dc=ds  \n')
-    netlist.write('vgsn     (vgn 0)         vsource dc=gs  \n')
-    netlist.write('vbsn     (vbn 0)         vsource dc=-sb \n')
-    netlist.write('vdsp     (vdp 0)         vsource dc=-ds \n')
-    netlist.write('vgsp     (vgp 0)         vsource dc=-gs \n')
-    netlist.write('vbsp     (vbp 0)         vsource dc=sb  \n')
+    netlist.write('parameters mosChar_gs=0 mosChar_ds=0 \n')
+    netlist.write('vdsn     (vdn 0)         vsource dc=mosChar_ds  \n')
+    netlist.write('vgsn     (vgn 0)         vsource dc=mosChar_gs  \n')
+    netlist.write('vbsn     (vbn 0)         vsource dc=-mosChar_sb \n')
+    netlist.write('vdsp     (vdp 0)         vsource dc=-mosChar_ds \n')
+    netlist.write('vgsp     (vgp 0)         vsource dc=-mosChar_gs \n')
+    netlist.write('vbsp     (vbp 0)         vsource dc=mosChar_sb  \n')
     netlist.write('\n')
-    netlist.write('mn (vdn vgn 0 vbn) {0} l=length*1e-6 w={1}e-6 multi=1 nf=10 _ccoflag=1\n'.format(modelN, width))
-    netlist.write('mp (vdp vgp 0 vbp) {0} l=length*1e-6 w={1}e-6 multi=1 nf=10 _ccoflag=1\n'.format(modelP, width))
+    netlist.write('mn (vdn vgn 0 vbn) {0} l=length*1e-6 w={1}e-6 multi=1 nf={2} _ccoflag=1\n'.format(modelN, width, numfing))
+    netlist.write('mp (vdp vgp 0 vbp) {0} l=length*1e-6 w={1}e-6 multi=1 nf={2} _ccoflag=1\n'.format(modelP, width, numfing))
     netlist.write('\n')
-    netlist.write('options1 options gmin=1e-13 reltol=1e-4 vabstol=1e-6 iabstol=1e-10 temp=27 tnom=27 rawfmt=nutbin rawfile="./charMOS.raw" save=none\n')
-    netlist.write('sweepvds sweep param=ds start=0 stop={0} step={1} {{ \n'.format(vdsMax, vdsStep))
-    netlist.write('sweepvgs dc param=gs start=0 stop={0} step={1} \n'.format(vgsMax, vgsStep))
+    netlist.write('options1 options gmin=1e-13 dc_pivot_check=yes reltol=1e-4 vabstol=1e-6 iabstol=1e-10 temp=27 tnom=27 rawfmt=nutbin rawfile="./charMOS.raw" save=none\n')
+    netlist.write('sweepvds sweep param=mosChar_ds start=0 stop={0} step={1} {{ \n'.format(vdsMax, vdsStep))
+    netlist.write('sweepvgs dc param=mosChar_gs start=0 stop={0} step={1} \n'.format(vgsMax, vgsStep))
     netlist.write('}\n')
 
 def genSimParams(L, VSB):
     paramFile = open("simParams.net", 'w')
     paramFile.write(".param length={0}\n".format(L))
-    paramFile.write(".param sb={0}\n".format(VSB))
+    paramFile.write(".param mosChar_sb={0}\n".format(VSB))
     paramFile.close()
 
 def genSimParamsSpectre(L, VSB):
     paramFile = open("simParams.scs", 'w')
     paramFile.write("parameters length={0}\n".format(L))
-    paramFile.write("parameters sb={0}\n".format(VSB))
+    paramFile.write("parameters mosChar_sb={0}\n".format(VSB))
     paramFile.close()
     
 def runSim(fileName='charMOS.net', simulator='ngspice'):
-    os.system("{0} {1} {2} &> /dev/null".format(simulator, fileName), simOptions)
+    os.system("{0} {1} {2}  &>> charMOSPy.log".format(simulator, fileName, simOptions))
 
 
 def genDB():
@@ -272,6 +272,10 @@ def genDB():
             
             if (simulator == "ngspice"):
                 genSimParams(mosLengths[idxL], vsb[idxVSB])
+                
+                myfile = open("charMOSpy.log", "a")
+                myfile.write("charMOS: Simulating for L={0}, VSB={1}\n".format(idxL, idxVSB))
+                myfile.close()
 
                 runSim("charNMOS.net", "ngspice")
                 simDat = pltNgspice.read('outN.raw')
