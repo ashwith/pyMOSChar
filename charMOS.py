@@ -353,7 +353,7 @@ def genDB():
             sys.stdout.write("\r[{0}{1}] {2}%".format("#"*progLen, " "*(columns-progLen), progPercent))
             sys.stdout.flush()
 
-    os.system('rm -fr charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log, charMOS.scs, charMOS.raw, charMOS.psf.raw')
+    os.system('rm -fr charNMOS.net charPMOS.net simParams.net outN.raw outP.raw b3v33check.log charMOS.scs simParams.scs charMOS.raw charMOS.raw.psf charMOS.ahdlSimDB charMOS.log')
     print
     print("Data generated. Saving...")
     pickle.dump(mosDat, open(datFileName, "wb"), pickle.HIGHEST_PROTOCOL)

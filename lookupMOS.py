@@ -11,6 +11,10 @@ def init(fileName='MOS.dat'):
     mosDat = pickle.load(open(fileName, 'rb'))
     print "Loading complete!"
 
+def reset():
+    global mosDat
+    mosDat = None
+
 def lookup(mosType, *outVars, **inVars):
 
     # Check if a valid MOSFET type is specified.
@@ -116,10 +120,18 @@ def lookup(mosType, *outVars, **inVars):
         points = (mosDat[mosType]['length'], -mosDat[mosType]['vsb'], mosDat[mosType]['vds'], mosDat[mosType]['vgs'])
     else:
         points = (mosDat[mosType]['length'],  mosDat[mosType]['vsb'], -mosDat[mosType]['vds'], -mosDat[mosType]['vgs'])
+    
+    xi_mesh = np.array(np.meshgrid(L, VSB, VDS, VGS))
+    xi = np.rollaxis(xi_mesh, 0, 5)
+    xi = xi.reshape(xi_mesh.size/4, 4)
 
-    xi = (L, VSB, VDS, VGS)
+    len_L = len(L) if type(L) == np.ndarray or type(L) == list else 1
+    len_VGS = len(VGS) if type(VGS) == np.ndarray or type(VGS) == list else 1
+    len_VDS = len(VDS) if type(VDS) == np.ndarray or type(VDS) == list else 1
+    len_VSB = len(VSB) if type(VSB) == np.ndarray or type(VSB) == list else 1
+
     if (mode == 1 or mode == 2):
-        result = np.squeeze(interpn(points, ydata, xi))
+        result = np.squeeze(interpn(points, ydata, xi).reshape(len_L, len_VSB, len_VDS, len_VGS))
     elif (mode == 3):
         print "ERROR: Mode 3 not supported yet :-("
 
