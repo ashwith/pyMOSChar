@@ -39,23 +39,20 @@ mosLengths = np.arange(0.1, 5.1, 0.1)
 #np.arange(1, 10, 0.5),
 #np.arange(10, 100, 10))
 
-# Initialize the characterization process. You normally
-# may not want to change this. One case you may want 
-# to is if your MOSFET has a different VDD. In such a
-# case, change vgsMAx, vdsMax and vsbMax accordingly.
-# Also pay attention to the step values. Keeping them
-# too tiny will use up a LOT of RAM and cause the 
-# machine to hang!
+# Initialize the characterization process. Modify
+# the values below as per your requirements. Ensure
+# that the step values aren't too small. Otherwise
+# your RAM will get used up.
 charMOS.init(
 simulator='ngspice',
 mosLengths=mosLengths,
-modelFiles=("/home/ashwith/Development/pyMOSChar/tsmc.mod",),
+modelFiles=("/home/ashwith/Development/pyMOSChar/pdk.mod",),
 modelN=nmos,
 modelP=pmos,
 simOptions="",
 corners=("",),
 subcktPath="",
-datFileName="mosTSMC_90_W{0}u.dat".format(width),
+datFileName="mosPDK_90_W{0}u.dat".format(width),
 vgsMax=1,
 vgsStep=20e-3,
 vdsMax=1,
