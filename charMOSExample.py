@@ -1,7 +1,71 @@
 #!/usr/bin/env python
+import sys
+# ==================================================
+# EDIT THE FOLLOWING PATH TO POINT TO YOUR DIRECTORY
+# ==================================================
+sys.path.append('/home/ashwith/Development/pyMOSChar')
+# ==================================================
 
 import charMOS
 import numpy as np
-mosLengths = np.concatenate((np.arange(0.18, 0.3, 0.02), np.arange(0.3, 2, 0.2), np.arange(2, 10, 0.5), np.array([10])))
-charMOS.init(mosLengths=mosLengths, modelFiles=('tsmc180.mod',))
+
+# Specify the name of the MOSFET model. Simple way to do so
+# is to create a schematic in Virtuoso that contains both
+# nmos and pmos transistors. Then generate the netlist in
+# ADE. You'll then be able to view the netlist and see what
+# the name of the model is.
+nmos = "CMOSN"
+pmos = "CMOSP"
+
+# Specify the MOSFET width in microns.
+width = 1
+
+
+# Specify the MOSFET lengths you're interested
+# in. The following code creates an array of
+# values from 0.1 to 5.1 in steps of 0.1. Note
+# that the arange() function omits the last value
+# so if you call np.arange(0.1, 5.1, 0.1), the
+# last value in the array will be 0.5.
+# MOS lengths are in microns. Don't keep the
+# step size too small. Fine steps will use a 
+# LOT of RAM can cause the machine to hang!
+#                     start, stop, step
+mosLengths = np.arange(0.1, 5.1, 0.1)
+
+## Example 2 for lenghs
+#mosLengths = np.concatenate(
+#np.arange(0.1, 1, 0.1),
+#np.arange(1, 10, 0.5),
+#np.arange(10, 100, 10))
+
+# Initialize the characterization process. You normally
+# may not want to change this. One case you may want 
+# to is if your MOSFET has a different VDD. In such a
+# case, change vgsMAx, vdsMax and vsbMax accordingly.
+# Also pay attention to the step values. Keeping them
+# too tiny will use up a LOT of RAM and cause the 
+# machine to hang!
+charMOS.init(
+simulator='ngspice',
+mosLengths=mosLengths,
+modelFiles=("/home/ashwith/Development/pyMOSChar/tsmc.mod",),
+modelN=nmos,
+modelP=pmos,
+simOptions="",
+corners=("",),
+subcktPath="",
+datFileName="mosTSMC_90_W{0}u.dat".format(width),
+vgsMax=1,
+vgsStep=20e-3,
+vdsMax=1,
+vdsStep=20e-3,
+vsbMax=1,
+vsbStep=20e-3,
+numfing=1,
+temp=300,
+width=width)
+
+# This function call finally generates the required database.
 charMOS.genDB()
+
