@@ -1,7 +1,9 @@
 pyMOSChar is a MOSFET Characterization package based off the gm/ID starter kit
 by Prof. Boris Murmann. It provides functions to characterize MOSFETs using
 simulators (spectre and ngspice are supported for now) and lookup the data.
-There are three modules available:
+This saves you from running DC simulations every time you begin circuit design
+and quickly generate plots that give you an intuitive picture of how the 
+MOSFETs behave in a particular process. There are three modules available:
 
    1. spice3read: Currently supports reading the SPICE3RAW files generated in DC
 simulations by ngspice and spectre. Features to be implemented include support
