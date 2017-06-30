@@ -2,7 +2,7 @@ import os
 import os.path
 import sys
 import pickle
-import pltNgspice
+import spice3read
 import numpy as np
 
 import signal
@@ -278,7 +278,7 @@ def genDB():
                 myfile.close()
 
                 runSim("charNMOS.net", "ngspice")
-                simDat = pltNgspice.read('outN.raw')
+                simDat = spice3read.read('outN.raw')
                 
                 mosDat['nfet']['id'][idxL][idxVSB]  = simDat['i(id)']
                 mosDat['nfet']['vt'][idxL][idxVSB]  = simDat['vt']
@@ -293,7 +293,7 @@ def genDB():
                 mosDat['nfet']['css'][idxL][idxVSB] = simDat['css']
 
                 runSim("charPMOS.net", "ngspice")
-                simDat = pltNgspice.read('outP.raw')
+                simDat = spice3read.read('outP.raw')
                 
                 mosDat['pfet']['id'][idxL][idxVSB]  = simDat['i(id)']
                 mosDat['pfet']['vt'][idxL][idxVSB]  = simDat['vt']
@@ -311,7 +311,7 @@ def genDB():
                 genSimParamsSpectre(mosLengths[idxL], vsb[idxVSB])
                 
                 runSim("charMOS.scs", "spectre")
-                simDat = pltNgspice.read('charMOS.raw', 'spectre')
+                simDat = spice3read.read('charMOS.raw', 'spectre')
                 
                 if (subcktPath == ""):
                     nmos = "mn"
